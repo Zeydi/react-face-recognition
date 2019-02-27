@@ -6,6 +6,7 @@ import Navigation from "./components/Navigation/Navigation";
 import Logo from "./components/Logo/Logo";
 import ImageLinkForm from "./components/ImageLinkForm/ImageLinkForm";
 import Rank from "./components/Rank/Rank";
+import FaceRecognition from "./components/FaceRecognition/FaceRecognition";
 import "./App.css";
 
 const app = new Clarifai.App({
@@ -82,30 +83,39 @@ class App extends Component {
   constructor() {
     super();
     this.state = {
-      ImageLink: ""
+      input: "",
+      imageLink: "",
+      box: {}
     };
   }
+  calculateFaceLocation = data => {
+    const clarifaiFace =
+      data.outputs[0].data.regions[0].region_info.bounding_box;
+    const image = document.getElementById("inputimage");
+    const width = Number(image.width);
+    const height = Number(image.height);
+    return {
+      leftCol: clarifaiFace.left_col * width,
+      topRow: clarifaiFace.top_row * height,
+      rightCol: width - clarifaiFace.right_col * width,
+      bottomRow: height - clarifaiFace.bottom_row * height
+    };
+  };
 
   onInputChange = event => {
     this.setState({
-      ImageLink: event.target.value
+      input: event.target.value
     });
   };
   onSubmit = () => {
-    console.log("click");
+    this.setState({
+      imageLink: this.state.input
+    });
+
     app.models
-      .predict(
-        "a403429f2ddf4b49b307e318f00e528b",
-        "https://samples.clarifai.com/face-det.jpg"
-      )
-      .then(
-        function(response) {
-          console.log(response);
-        },
-        function(err) {
-          // there was an error
-        }
-      );
+      .predict(Clarifai.FACE_DETECT_MODEL, this.state.input)
+      .then(response => this.calculateFaceLocation(response))
+      .catch(err => console.log(err));
   };
   render() {
     return (
@@ -118,6 +128,7 @@ class App extends Component {
           onInputChange={this.onInputChange}
           onSubmit={this.onSubmit}
         />
+        <FaceRecognition image={this.state.imageLink} box={this.state.box} />
       </div>
     );
   }
