@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import Particles from "react-particles-js";
 import Clarifai from "clarifai";
-
 import Navigation from "./components/Navigation/Navigation";
 import Logo from "./components/Logo/Logo";
 import ImageLinkForm from "./components/ImageLinkForm/ImageLinkForm";
@@ -102,6 +101,11 @@ class App extends Component {
     };
   };
 
+  displayFaceBox = box => {
+    console.log(box);
+    this.setState({ box });
+  };
+
   onInputChange = event => {
     this.setState({
       input: event.target.value
@@ -114,7 +118,9 @@ class App extends Component {
 
     app.models
       .predict(Clarifai.FACE_DETECT_MODEL, this.state.input)
-      .then(response => this.calculateFaceLocation(response))
+      .then(response =>
+        this.displayFaceBox(this.calculateFaceLocation(response))
+      )
       .catch(err => console.log(err));
   };
   render() {
